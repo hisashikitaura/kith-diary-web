@@ -13,9 +13,11 @@ import { EntryDetail } from "./EntryDetail";
 import { SearchView } from "./SearchView";
 import { CalendarView } from "./CalendarView";
 import { SettingsPanel } from "./SettingsPanel";
+import { LockScreen } from "./LockScreen";
+import { PasskeySetup } from "./PasskeySetup";
 
 export function AppShell() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, unlocked, hasPasskey } = useAuth();
   const [view, setView] = useState<AppView>("timeline");
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -87,6 +89,14 @@ export function AppShell() {
 
   if (!user) {
     return <LoginScreen />;
+  }
+
+  // Match production: no passkey → setup; has passkey but locked → lock screen
+  if (!hasPasskey) {
+    return <PasskeySetup />;
+  }
+  if (!unlocked) {
+    return <LockScreen />;
   }
 
   if (view === "detail" && selected) {
