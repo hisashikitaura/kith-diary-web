@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAllowedUser() {
+      return request.auth != null
+        && request.auth.token.email == 'owner@example.com';
+    }
+
+    // Web path
+    match /users/{uid}/{allPaths=**} {
+      allow read, write: if isAllowedUser() && request.auth.uid == uid;
+    }
+
+    // iOS path: images/{userId}/...
+    match /images/{uid}/{allPaths=**} {
+      allow read, write: if isAllowedUser() && request.auth.uid == uid;
+    }
+  }
+}
