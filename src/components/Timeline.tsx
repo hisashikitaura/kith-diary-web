@@ -48,7 +48,7 @@ export function Timeline({
             disabled={loading}
             className="px-4 py-2 text-sm rounded-lg bg-white border border-gray-200 text-[#1A3A4A] hover:bg-gray-50 disabled:opacity-50 min-h-[44px]"
           >
-            {loading ? "読み込み中..." : "さらに読み込む"}
+            {loading ? "読み込み中..." : "もっと見る"}
           </button>
         </div>
       )}

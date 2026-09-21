@@ -29,4 +29,4 @@ export type AppView =
   | "settings";
 
 export const ALLOWED_EMAIL = "owner@example.com";
-export const PAGE_SIZE = 20;
+export const PAGE_SIZE = 10;

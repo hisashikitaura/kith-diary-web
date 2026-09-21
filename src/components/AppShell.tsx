@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DocumentSnapshot } from "firebase/firestore";
 import { useAuth } from "@/lib/auth";
-import type { AppView, DiaryEntry } from "@/lib/types";
+import { PAGE_SIZE, type AppView, type DiaryEntry } from "@/lib/types";
 import { fetchEntriesPage } from "@/lib/entries";
 import { LoginScreen } from "./LoginScreen";
 import { Header } from "./Header";
@@ -27,6 +27,7 @@ export function AppShell() {
   const [searchInitial, setSearchInitial] = useState("");
   const [composeOpen, setComposeOpen] = useState(false);
   const cursorRef = useRef<DocumentSnapshot | null>(null);
+  const hasMoreRef = useRef(true);
   const loadingRef = useRef(false);
 
   const refresh = useCallback(async () => {
@@ -34,9 +35,10 @@ export function AppShell() {
     loadingRef.current = true;
     setLoading(true);
     try {
-      const result = await fetchEntriesPage(user.uid, undefined, null);
+      const result = await fetchEntriesPage(user.uid, PAGE_SIZE, null);
       setEntries(result.entries);
       cursorRef.current = result.lastDoc;
+      hasMoreRef.current = result.hasMore;
       setHasMore(result.hasMore);
     } catch (err) {
       console.error("Error refreshing entries:", err);
@@ -47,17 +49,20 @@ export function AppShell() {
   }, [user]);
 
   const loadMore = useCallback(async () => {
-    if (!user || loadingRef.current || !cursorRef.current) return;
+    if (!user || loadingRef.current || !hasMoreRef.current || !cursorRef.current) {
+      return;
+    }
     loadingRef.current = true;
     setLoading(true);
     try {
       const result = await fetchEntriesPage(
         user.uid,
-        undefined,
+        PAGE_SIZE,
         cursorRef.current
       );
       setEntries((prev) => [...prev, ...result.entries]);
       cursorRef.current = result.lastDoc;
+      hasMoreRef.current = result.hasMore;
       setHasMore(result.hasMore);
     } catch (err) {
       console.error("Error loading entries:", err);
@@ -73,6 +78,7 @@ export function AppShell() {
     } else {
       setEntries([]);
       cursorRef.current = null;
+      hasMoreRef.current = true;
       setHasMore(true);
       setView("timeline");
       setSelected(null);
