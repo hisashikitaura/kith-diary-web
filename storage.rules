@@ -8,7 +8,20 @@ service firebase.storage {
 
     // Web path
     match /users/{uid}/{allPaths=**} {
-      allow read, write: if isAllowedUser() && request.auth.uid == uid;
+      allow read: if isAllowedUser() && request.auth.uid == uid;
+    }
+
+    // Web diary photos
+    match /users/{uid}/entries/{allPaths=**} {
+      allow write: if isAllowedUser() && request.auth.uid == uid;
+    }
+
+    // Kith Food meal photos: owner only, JPEG/image, < 10MB
+    match /users/{uid}/meals/{file} {
+      allow delete: if isAllowedUser() && request.auth.uid == uid;
+      allow create, update: if isAllowedUser() && request.auth.uid == uid
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.size < 10 * 1024 * 1024;
     }
 
     // iOS path: images/{userId}/...

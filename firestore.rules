@@ -14,6 +14,13 @@ service cloud.firestore {
         allow read, write: if isAllowedUser() && request.auth.uid == uid;
       }
 
+      // Kith Food meals (iOS). Owner only; AI fields are written by Cloud Functions (admin SDK).
+      match /meals/{mealId} {
+        allow read, delete: if isAllowedUser() && request.auth.uid == uid;
+        allow create, update: if isAllowedUser() && request.auth.uid == uid
+          && request.resource.data.photoPath == 'users/' + uid + '/meals/' + mealId + '.jpg';
+      }
+
       // AI analyses: written only by Cloud Functions (admin SDK)
       match /analyses/{month} {
         allow read: if isAllowedUser() && request.auth.uid == uid;

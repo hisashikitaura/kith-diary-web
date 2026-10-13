@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -214,4 +215,83 @@ export const backfillAnalyses = onCall(
     const remaining = todo.length - done.length - failed.length;
     return { totalMonths: months.length, alreadySaved: months.length - todo.length, done, failed, remaining };
   }
+);
+
+/** ---- Kith Food: analyze one dish photo ---- */
+export const DISH_GENRES = [
+  "ラーメン", "寿司", "焼肉", "カレー", "中華", "イタリアン",
+  "和食", "洋食", "カフェ・スイーツ", "その他",
+];
+
+const dishSchema = {
+  type: Type.OBJECT,
+  properties: {
+    dish: { type: Type.STRING },
+    genre: { type: Type.STRING, enum: DISH_GENRES },
+    comment: { type: Type.STRING },
+    confidence: { type: Type.NUMBER },
+  },
+  required: ["dish", "genre", "comment", "confidence"],
+};
+
+export const analyzeDish = onCall(
+  { region: FUNCTION_REGION, timeoutSeconds: 60, memory: "512MiB", maxInstances: 3 },
+  async (request) => {
+    const uid = requireOwner(request.auth);
+    const mealId = String(request.data?.mealId ?? "");
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(mealId)) {
+      throw new HttpsError("invalid-argument", "mealId が不正です。");
+    }
+    const ref = getFirestore().doc(`users/${uid}/meals/${mealId}`);
+    const snap = await ref.get();
+    if (!snap.exists) throw new HttpsError("not-found", "記録が見つかりません。");
+    const expected = `users/${uid}/meals/${mealId}.jpg`;
+    if (snap.get("photoPath") !== expected) {
+      throw new HttpsError("permission-denied", "写真のパスが不正です。");
+    }
+    await ref.update({ aiStatus: "analyzing" });
+    try {
+      const [buf] = await getStorage().bucket().file(expected).download();
+      if (buf.length > 10 * 1024 * 1024) throw new Error("image too large");
+      const ai = new GoogleGenAI({
+        vertexai: true,
+        project: process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT,
+        location: VERTEX_LOCATION,
+      });
+      const res = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: [{
+          role: "user",
+          parts: [
+            { inlineData: { mimeType: "image/jpeg", data: buf.toString("base64") } },
+            { text: `この料理の写真を見て、日本語で答えてください。
+dish: 料理名（短く、例: 味噌ラーメン）
+genre: 次から1つ: ${DISH_GENRES.join(" / ")}
+comment: 料理の見た目についての一言（40文字以内）
+confidence: 判定の確信度 0〜1
+料理が写っていない場合は dish を「不明」、genre を「その他」、confidence を低くしてください。` },
+          ],
+        }],
+        config: { responseMimeType: "application/json", responseSchema: dishSchema, temperature: 0.3 },
+      });
+      const r = JSON.parse(res.text ?? "{}");
+      const genre = DISH_GENRES.includes(r.genre) ? r.genre : "その他";
+      const conf = Math.max(0, Math.min(1, Number(r.confidence) || 0));
+      const out = {
+        dish: String(r.dish ?? "").slice(0, 80),
+        genre,
+        aiComment: String(r.comment ?? "").slice(0, 200),
+        aiConfidence: conf,
+        aiStatus: "done",
+        aiAt: FieldValue.serverTimestamp(),
+      };
+      await ref.update(out);
+      return { dish: out.dish, genre, comment: out.aiComment, confidence: conf };
+    } catch (e) {
+      console.error("analyzeDish failed", e);
+      await ref.update({ aiStatus: "error" });
+      if (e instanceof HttpsError) throw e;
+      throw new HttpsError("internal", "AI分析に失敗しました。");
+    }
+  },
 );
