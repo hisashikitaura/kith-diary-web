@@ -5,6 +5,7 @@ interface Props {
   onSearch: () => void;
   onCalendar: () => void;
   onSettings: () => void;
+  onAnalysis?: () => void;
   searchValue?: string;
   onSearchChange?: (v: string) => void;
   onSearchSubmit?: () => void;
@@ -16,6 +17,7 @@ export function Header({
   onSearch,
   onCalendar,
   onSettings,
+  onAnalysis,
   searchValue = "",
   onSearchChange,
   onSearchSubmit,
@@ -67,6 +69,16 @@ export function Header({
         >
           <CalendarIcon />
         </button>
+        {onAnalysis && (
+          <button
+            type="button"
+            onClick={onAnalysis}
+            className="px-2.5 py-1.5 rounded-lg text-sm font-medium text-[#1A3A4A] bg-white/50 hover:bg-white/80"
+            aria-label="AI分析"
+          >
+            AI分析
+          </button>
+        )}
         <button
           type="button"
           onClick={onSettings}

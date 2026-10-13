@@ -5,6 +5,7 @@ import {
   type Auth,
 } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFunctions, type Functions } from "firebase/functions";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 import {
   initializeAppCheck,
@@ -82,3 +83,9 @@ export function initAppCheckIfNeeded(): AppCheck | undefined {
 }
 
 export const googleProvider = new GoogleAuthProvider();
+
+let functionsInstance: Functions | undefined;
+export function getFirebaseFunctions(): Functions {
+  if (!functionsInstance) functionsInstance = getFunctions(getFirebaseApp(), "asia-northeast1");
+  return functionsInstance;
+}

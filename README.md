@@ -96,3 +96,28 @@ firebase.json
 - Auth is gated client-side and by Firestore/Storage rules to `owner@example.com`.
 - Passkey / WebAuthn and AI comment generation exist on the live/iOS side but are not required for this rebuild; `ai_comment` is displayed when present.
 - App Check enforcement stays OFF; initialization is best-effort.
+
+## AI分析（Gemini / Vertex AI）
+
+「AI分析」ボタンから、期間（30日 / 90日 / 全期間）を選んで日記を分析します。
+Cloud Function `analyzeDiary`（2nd gen, asia-northeast1）がサーバー側で本人（`users/{uid}/entries`）の日記だけを Admin SDK で読み、
+本文と日付のみ（最大200件・合計約6万文字）を Vertex AI の Gemini（`gemini-2.5-flash`、`functions/src/index.ts` の定数で変更可）に送ります。
+APIキーは使わず、関数のサービスアカウント（ADC）で認証します。Firestore ルールは変更していません。
+
+### 初回セットアップ（コンソール作業）
+1. Google Cloud コンソール（プロジェクト `kith-diary`）で **Vertex AI API**（`aiplatform.googleapis.com`）を有効化
+   `gcloud services enable aiplatform.googleapis.com --project kith-diary`
+2. 関数の実行サービスアカウント（既定: `<PROJECT_NUMBER>-compute@developer.gserviceaccount.com`）に **Vertex AI ユーザー**（`roles/aiplatform.user`）を付与
+   `gcloud projects add-iam-policy-binding kith-diary --member=serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com --role=roles/aiplatform.user`
+3. デプロイ
+   ```
+   cd functions && npm install && cd ..
+   npm run build
+   firebase deploy --only functions,hosting
+   ```
+
+### 費用
+Blaze プランの従量課金。Gemini Flash は入力100万トークンあたり数十円程度で、1回の分析（最大6万文字）は通常1円前後です。Cloud Functions も無料枠内に収まることがほとんどです。念のため Cloud Billing で予算アラートの設定を推奨します。
+
+### プライバシー
+Vertex AI（有料・Google Cloud 規約）経由のため、送信した日記は Google のモデル学習に使われません。不正利用監視のため一時的に処理されることはあります。無料の Gemini Developer API キーは使っていません。

@@ -26,7 +26,8 @@ export type AppView =
   | "calendar"
   | "detail"
   | "compose"
-  | "settings";
+  | "settings"
+  | "analysis";
 
 export const ALLOWED_EMAIL = "owner@example.com";
 export const PAGE_SIZE = 10;

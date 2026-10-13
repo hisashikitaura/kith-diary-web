@@ -1,0 +1,13 @@
+{
+  "name": "kith-diary-functions",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": { "node": "22" },
+  "scripts": { "build": "tsc", "deploy": "firebase deploy --only functions" },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "devDependencies": { "typescript": "^5.6.0" }
+}

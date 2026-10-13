@@ -13,6 +13,7 @@ import { EntryDetail } from "./EntryDetail";
 import { SearchView } from "./SearchView";
 import { CalendarView } from "./CalendarView";
 import { SettingsPanel } from "./SettingsPanel";
+import { AnalysisView } from "./AnalysisView";
 import { LockScreen } from "./LockScreen";
 import { PasskeySetup } from "./PasskeySetup";
 
@@ -148,6 +149,10 @@ export function AppShell() {
     );
   }
 
+  if (view === "analysis") {
+    return <AnalysisView onBack={() => setView("timeline")} />;
+  }
+
   if (view === "settings") {
     return <SettingsPanel onBack={() => setView("timeline")} />;
   }
@@ -161,6 +166,7 @@ export function AppShell() {
         }}
         onCalendar={() => setView("calendar")}
         onSettings={() => setView("settings")}
+        onAnalysis={() => setView("analysis")}
         searchValue={searchDraft}
         onSearchChange={setSearchDraft}
         onSearchSubmit={() => {
