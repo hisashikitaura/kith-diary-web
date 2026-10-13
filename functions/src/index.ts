@@ -15,7 +15,7 @@ const ALLOWED_EMAIL = "owner@example.com";
 const MAX_ENTRIES = 200;
 const MAX_TOTAL_CHARS = 60000;
 const MAX_ENTRY_CHARS = 1500;
-const SCAN_LIMIT = 10000;
+const SCAN_LIMIT = 5000;
 const JST = 9 * 3600000;
 const BACKFILL_END = "2026-09";
 
@@ -74,10 +74,18 @@ function monthRange(month: string): { from: number; to: number } {
 type Row = { ms: number; text: string };
 
 async function loadRows(uid: string): Promise<Row[]> {
-  const snap = await getFirestore()
-    .collection("users").doc(uid).collection("entries")
-    .orderBy("date_journal", "desc").limit(SCAN_LIMIT).get();
-  return snap.docs
+  const col = getFirestore().collection("users").doc(uid).collection("entries");
+  const docs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+  let last: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+  for (;;) {
+    let q = col.orderBy("date_journal", "desc").limit(SCAN_LIMIT);
+    if (last) q = q.startAfter(last);
+    const snap = await q.get();
+    docs.push(...snap.docs);
+    if (snap.size < SCAN_LIMIT) break;
+    last = snap.docs[snap.docs.length - 1];
+  }
+  return docs
     .map((d) => {
       const data = d.data();
       return { ms: toMillis(data.date_journal), text: String(data.text ?? "").trim() };
