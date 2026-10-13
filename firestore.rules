@@ -13,6 +13,12 @@ service cloud.firestore {
       match /entries/{entryId} {
         allow read, write: if isAllowedUser() && request.auth.uid == uid;
       }
+
+      // AI analyses: written only by Cloud Functions (admin SDK)
+      match /analyses/{month} {
+        allow read: if isAllowedUser() && request.auth.uid == uid;
+        allow write: if false;
+      }
     }
 
     // Legacy top-level entries (older iOS). Delete must NOT require request.resource.
