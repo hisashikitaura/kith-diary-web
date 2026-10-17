@@ -235,7 +235,7 @@ const dishSchema = {
 };
 
 export const analyzeDish = onCall(
-  { region: FUNCTION_REGION, timeoutSeconds: 60, memory: "512MiB", maxInstances: 3 },
+  { region: FUNCTION_REGION, timeoutSeconds: 60, memory: "512MiB", maxInstances: 3, invoker: "public" },
   async (request) => {
     const uid = requireOwner(request.auth);
     const mealId = String(request.data?.mealId ?? "");
