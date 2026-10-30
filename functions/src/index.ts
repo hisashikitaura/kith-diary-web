@@ -295,3 +295,5 @@ confidence: 判定の確信度 0〜1
     }
   },
 );
+
+export { syncMealToAws, backfillMealsToAws } from "./awsSync";

@@ -43,3 +43,6 @@ next-env.d.ts
 
 # firebase
 .firebase/
+
+# functions runtime config (non-secret, but keep out of git)
+functions/.env.*
