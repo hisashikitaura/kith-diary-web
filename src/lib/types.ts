@@ -29,5 +29,5 @@ export type AppView =
   | "settings"
   | "analysis";
 
-export const ALLOWED_EMAIL = "owner@example.com";
+export const ALLOWED_EMAIL = process.env.NEXT_PUBLIC_OWNER_EMAIL ?? "";
 export const PAGE_SIZE = 10;

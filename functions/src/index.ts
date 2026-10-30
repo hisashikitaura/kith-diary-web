@@ -12,7 +12,7 @@ export const FUNCTION_REGION = "asia-northeast1";
 export const VERTEX_LOCATION = "asia-northeast1";
 /** Gemini Flash model on Vertex AI (change here to upgrade). */
 export const GEMINI_MODEL = "gemini-2.5-flash";
-const ALLOWED_EMAIL = "owner@example.com";
+const ALLOWED_EMAIL = process.env.OWNER_EMAIL ?? "";
 const MAX_ENTRIES = 200;
 const MAX_TOTAL_CHARS = 60000;
 const MAX_ENTRY_CHARS = 1500;

@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function isAllowedUser() {
       return request.auth != null
-        && request.auth.token.email == 'owner@example.com';
+        && request.auth.token.email == '__OWNER_EMAIL__';
     }
 
     // Web (and nested path)

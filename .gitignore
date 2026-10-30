@@ -46,3 +46,7 @@ next-env.d.ts
 
 # functions runtime config (non-secret, but keep out of git)
 functions/.env.*
+
+# generated from *.rules.template by `npm run gen:rules` (contains owner email)
+firestore.rules
+storage.rules

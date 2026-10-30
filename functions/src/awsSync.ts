@@ -15,7 +15,7 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 const REGION = "asia-northeast1";
-const ALLOWED_EMAIL = "owner@example.com";
+const ALLOWED_EMAIL = process.env.OWNER_EMAIL ?? "";
 const cfg = () => ({
   roleArn: process.env.KF_AWS_ROLE_ARN ?? "",
   queueUrl: process.env.KF_AWS_QUEUE_URL ?? "",

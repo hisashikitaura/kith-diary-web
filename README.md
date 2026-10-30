@@ -14,7 +14,7 @@ Journey風のパーソナル日記アプリ（Next.js App Router + TypeScript + 
 
 ## Features
 
-1. Google ログイン / ログアウト（許可メール: `owner@example.com`）
+1. Google ログイン / ログアウト（許可メールは環境変数で指定）
 2. タイムライン（`date_journal` 降順・ページネーション）
 3. 新規作成（本文・任意写真・任意場所・任意日付）
 4. 詳細表示・削除（Firestore document id）
@@ -76,7 +76,7 @@ firebase deploy --only firestore:rules,storage
 
 `firebase.json` points Hosting at `out/` and includes Firestore / Storage rules paths.
 
-Rules also live under `firebase/` for convenience.
+Rules are generated from `*.rules.template`: set `NEXT_PUBLIC_OWNER_EMAIL` in `.env.local`, then run `npm run gen:rules` before deploying rules. Cloud Functions read `OWNER_EMAIL` from `functions/.env.<project>` (gitignored).
 
 ## Project layout
 
@@ -93,7 +93,7 @@ firebase.json
 
 ## Notes
 
-- Auth is gated client-side and by Firestore/Storage rules to `owner@example.com`.
+- Auth is gated client-side and by Firestore/Storage rules to the owner email (env `NEXT_PUBLIC_OWNER_EMAIL` / functions `OWNER_EMAIL`).
 - Passkey / WebAuthn and AI comment generation exist on the live/iOS side but are not required for this rebuild; `ai_comment` is displayed when present.
 - App Check enforcement stays OFF; initialization is best-effort.
 

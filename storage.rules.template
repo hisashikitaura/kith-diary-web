@@ -3,7 +3,7 @@ service firebase.storage {
   match /b/{bucket}/o {
     function isAllowedUser() {
       return request.auth != null
-        && request.auth.token.email == 'owner@example.com';
+        && request.auth.token.email == '__OWNER_EMAIL__';
     }
 
     // Web path
