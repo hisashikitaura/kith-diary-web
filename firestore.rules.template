@@ -58,5 +58,30 @@ service cloud.firestore {
       allow read: if isAllowedUser();
       allow update, delete: if false;
     }
+
+    // ===== Miso site (hisashikitaura/miso-site) =====
+    // Public: published entries + settings are readable by anyone. Owner-only writes.
+    function isMisoOwner() {
+      return isAllowedUser() && request.auth.token.email_verified == true;
+    }
+    function validMisoEntry(d) {
+      return d.keys().hasOnly(['stage', 'date', 'title', 'body', 'photos', 'published', 'createdAt', 'updatedAt'])
+        && d.stage in ['shikomi', 'jukusei', 'kansei']
+        && d.date is string && d.date.size() == 10
+        && d.title is string && d.title.size() <= 200
+        && d.body is string && d.body.size() <= 20000
+        && d.photos is list && d.photos.size() <= 12
+        && d.published is bool;
+    }
+    match /miso_entries/{entryId} {
+      allow get, list: if resource.data.published == true || isMisoOwner();
+      allow create, update: if isMisoOwner() && validMisoEntry(request.resource.data);
+      allow delete: if isMisoOwner();
+    }
+    match /miso_settings/{docId} {
+      // "owner" doc is a private probe the admin UI reads to confirm owner access.
+      allow read: if docId != 'owner' || isMisoOwner();
+      allow write: if isMisoOwner();
+    }
   }
 }

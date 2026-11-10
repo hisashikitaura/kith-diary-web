@@ -28,5 +28,14 @@ service firebase.storage {
     match /images/{uid}/{allPaths=**} {
       allow read, write: if isAllowedUser() && request.auth.uid == uid;
     }
+
+    // Miso site photos: public read, owner-only write (images < 10MB)
+    match /miso/{allPaths=**} {
+      allow read: if true;
+      allow delete: if isAllowedUser() && request.auth.token.email_verified == true;
+      allow create, update: if isAllowedUser() && request.auth.token.email_verified == true
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.size < 10 * 1024 * 1024;
+    }
   }
 }
