@@ -16,6 +16,11 @@ service firebase.storage {
       allow write: if isAllowedUser() && request.auth.uid == uid;
     }
 
+    // iOS diary photos (Kith Diary uploads to users/{uid}/images/, not entries/)
+    match /users/{uid}/images/{allPaths=**} {
+      allow write: if isAllowedUser() && request.auth.uid == uid;
+    }
+
     // Kith Food meal photos: owner only, JPEG/image, < 10MB
     match /users/{uid}/meals/{file} {
       allow delete: if isAllowedUser() && request.auth.uid == uid;
